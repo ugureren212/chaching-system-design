@@ -1,33 +1,38 @@
-const express = require('express');
-const redis = require('redis');
+const express = require("express");
+const axios = require("axios");
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// Redis client setup
-const redisClient = redis.createClient({
-    url: 'redis://localhost:6379'
-});
+async function fetchApiData(species) {
+  const apiResponse = await axios.get(
+    `https://www.fishwatch.gov/api/species/${species}`
+  );
+  console.log("Request sent to the API");
+  return apiResponse.data;
+}
 
-// Connect to Redis
-(async () => {
-    try {
-        await redisClient.connect();
-        console.log('Connected to Redis successfully');
-    } catch (err) {
-        console.error('Redis connection error:', err);
+async function getSpeciesData(req, res) {
+  const species = req.params.species;
+  let results;
+
+  try {
+    results = await fetchApiData(species);
+    if (results.length === 0) {
+      throw "API returned an empty array";
     }
-})();
+    res.send({
+      fromCache: false,
+      data: results,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(404).send("Data unavailable");
+  }
+}
 
-// Basic middleware
-app.use(express.json());
+app.get("/fish/:species", getSpeciesData);
 
-// Basic route
-app.get('/', (req, res) => {
-    res.json({ message: 'Server is running' });
-});
-
-// Start server
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-}); 
+  console.log(`App listening on port ${port}`);
+});
