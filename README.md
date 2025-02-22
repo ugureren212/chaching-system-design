@@ -1,29 +1,83 @@
-# Basic Node.js with Redis Setup
+# Fish Species Information API with Redis Caching
 
-This is a basic Node.js application with Redis integration.
+A Node.js application that fetches fish species information from the FishWatch API and implements Redis caching for improved performance.
 
 ## Prerequisites
 
-- Node.js
-- Redis server installed and running locally
+Before running the application, make sure you have the following installed:
+- Node.js (v14 or higher)
+- Redis server
+- npm (Node Package Manager)
 
 ## Installation
 
-1. Install dependencies:
+1. Install Redis (if not already installed):
+   ```bash
+   # For macOS using Homebrew
+   brew install redis
+
+   # For Ubuntu/Debian
+   sudo apt-get install redis-server
+   ```
+
+2. Start Redis server:
+   ```bash
+   # Using Homebrew services on macOS
+   brew services start redis
+   
+   # Or start Redis directly
+   redis-server
+   ```
+
+3. Install project dependencies:
+   ```bash
+   npm install
+   ```
+
+## Running the Application
+
+You can run the application in two modes:
+
+### Development Mode (with auto-reload)
 ```bash
-npm install
+npm run dev
 ```
+This will start the server using nodemon, which automatically restarts when you make changes to the code.
 
-2. Make sure Redis server is running locally on port 6379
-
-3. Start the application:
+### Production Mode
 ```bash
 npm start
 ```
+This will start the server normally.
 
-The server will start on port 3000.
+The server will run on port 3000 by default (http://localhost:3000).
 
-## Basic Structure
+## API Endpoints
 
-- `server.js` - Main application file with Express and Redis setup
-- Basic endpoint at `http://localhost:3000/`
+### Get Fish Species Information
+```bash
+GET /fish/:species
+```
+Example:
+```bash
+curl http://localhost:3000/fish/red-snapper
+```
+
+- The first request will fetch data from the FishWatch API
+- Subsequent requests within 180 seconds (3 minutes) will return cached data
+- Response includes `fromCache` boolean indicating if the data was served from cache
+
+## Cache Details
+- Cache duration: 180 seconds (3 minutes)
+- Cache automatically expires after the duration
+- Redis is used as the caching layer
+
+## Environment Variables
+- `PORT`: Server port (default: 3000)
+- Redis connection assumes default localhost:6379
+
+## Development
+- Source code is in `server.js`
+- Uses Express.js for the web server
+- Uses Redis for caching
+- Uses Axios for API requests
